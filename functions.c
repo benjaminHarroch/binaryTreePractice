@@ -1,195 +1,5 @@
+
 #include "header.h"
-
-
-BOOL buildExpressionTree(char* str, Tree* tr) {
-
-	BOOL bracketGood, digitGood, operatorGood;
-	int sizeStr = strlen(str);
-
-	bracketGood =chekeDigiteNums(str,sizeStr);
-	digitGood=chekeBracket(str,sizeStr);
-	operatorGood = chekeOperators(str,sizeStr);
-
-	if (bracketGood && digitGood && operatorGood) {
-		*tr=helperBuildTree(str,sizeStr);
-		return TRUE;
-	}else {
-		return FALSE;
-	}
-
-}
-
-Tree helperBuildTree(char *str,int size) {
-
-
-	int index = findIndexOperators(str,size );
-	Tree tr;
-
-	if (index == -1) {
-
-		return;
-	}
-	else {
-
-		tr.root = createNode(str[index], NULL, NULL);
-		chekeMemoryAllocation(tr.root);
-		
-
-		if (str[index + 1] >= 48 && str[index + 1] <= 57) {
-			tr.root->right = createNode(str[index + 1], NULL, NULL);
-		}
-		else {
-			tr.root->right=helperBuildTree(str + index +1, size - index-1).root;
-		}
-		if (str[index - 1] >= 48 && str[index - 1] <= 57) {
-			tr.root->left = createNode(str[index -1], NULL, NULL);
-		}
-		else {
-			tr.root->left = helperBuildTree(str+1, index-1).root;
-		}
-
-		return tr;
-	}
-
-}
-
-
-int calcExpression(Tree tr) {
-
-	float sum;
-	float dummyptr;
-	sum = 0;
-
-	helperCalcExpression(tr.root, &sum,&dummyptr);
-
-	return (int)sum;
-}
-
-void helperCalcExpression(TreeNode *root, float *sum,float *ptr) {
-
-	float sumL, sumR;
-
-	if (root == NULL) {
-		*ptr = 0;
-		return;
-	}
-	else {
-
-		helperCalcExpression(root->left, sum, &sumL);
-		helperCalcExpression(root->right, sum,&sumR);
-		
-		*ptr = calculeSum(root->data, sumL, sumR);
-		*sum = *ptr;
-	}
-}
-
-BOOL  chekeDigiteNums(char* str,int size) {
-
-	int i;
-	BOOL flage = 1;
-
-	//ASCII value of 0 = 48, 9 = 57. So if value is outside of numeric range then fail
-	for (i = 0; i < size; i++) {
-		
-		if (str[i] >=48 && str[i] <= 57) {
-
-			if (str[i+1] >= 48 && str[i+1] <= 57) {
-				flage = 0;
-				return flage;
-			}
-		}
-	}
-
-	return flage;
-}
-
-BOOL chekeBracket(char *str,int size) {
-
-	int i,counterOpenBrasket,counterCloseBrasket;
-	counterCloseBrasket = 0;
-	counterOpenBrasket = 0;
-	
-
-	for (i = 0; i < size; i++) {
-
-		if (str[i] == '(' ) {
-			counterOpenBrasket++;
-		}
-		if (str[i] == ')') {
-			counterCloseBrasket++;
-		}
-	}
-
-	if (counterCloseBrasket == counterOpenBrasket)
-		return TRUE;
-
-	return FALSE;
-
-}
-
-BOOL chekeOperators(char *str,int size) {
-
-	int i;
-	BOOL flage;
-	flage = 1;
-
-	for (i = 0; i < size; i++) {
-
-		//if this is a different operator and this not number so thie char is not available
-		if (str[i] != '(' && str[i] != ')' && str[i] != '+' && str[i] != '-' && str[i] != '*' && str[i] != '/' && str[i] != '%') {
-			if (str[i] < 48 && str[i]>57) {
-				flage = 0;
-				return flage;
-			}
-		}
-	}
-
-	return flage;
-
-}
-
-TreeNode* createNode(char data, TreeNode* left, TreeNode* right) {
-
-	TreeNode* newNode = (TreeNode*)malloc(sizeof(TreeNode));
-	chekeMemoryAllocation(newNode);
-
-	newNode->data = data;
-	newNode->left = left;
-	newNode->right = right;
-
-	return newNode;
-
-}
-
-int findIndexOperators(char* str, int size) {
-	
-	int openBracketsCounter = 0;
-	int operatorsCounter = 0;
-	int index = 0;
-	BOOL flage;
-	flage = TRUE;
-
-	while (index < size) {
-
-		if (*(str + index) == '(') {
-
-			openBracketsCounter++;
-		}
-
-		else if (*(str + index) == '+' || *(str + index) == '-' || *(str + index) == '*' || *(str + index) == '/' ||
-			*(str + index) == '%')
-			operatorsCounter++;
-
-		if (openBracketsCounter == operatorsCounter) {
-
-			return index;
-		}
-
-		index++;
-	}
-
-	return -1;
-}
 
 void freeTree(Tree tr) {
 
@@ -217,38 +27,259 @@ void chekeMemoryAllocation(void* ptr) {
 	}
 }
 
-float  calculeSum(char oper, char num1, char num2) {
+void helperToPrint(TreeNode* root) {
 
-	float newNum1 = num1 - '0';
-	float newNum2 = num2 - '0';
-	float sum = 0;
-
-	if (oper == '+') {
-
-		sum = newNum1 + newNum2;
+	if (root == NULL) {
+		return;
 	}
-	else if (oper == '-') {
 
-		sum = newNum1 - newNum2;
+	else {
+		//pritn all the left side and the root and the right side.
+		helperToPrint(root->left);
+		printf("%d ", root->data);
+		helperToPrint(root->right);
+
 	}
-	else if (oper == '/') {
 
-		sum = newNum1 / newNum2;
+}
+
+void printTreeInorder(Tree tr) {
+
+	helperToPrint(tr.root);
+
+}
+
+Tree BuildTreeFromArrayWithLeafList(int* arr, int  size) {
+
+	Tree tr;
+	tr = BuildTreeFromArray(arr, size);
+	makeEmptyList(&tr.leafList);
+	buildList(tr.root, &tr.leafList);
+	return tr;
+}
+
+Tree  BuildTreeFromArray(int* arr, int  size) {
+
+	Tree tr;
+	tr = helper(arr, size);
+	return tr;
+}
+
+
+//function helper :
+//the function get the arr and "cut" him every itaration at half is size
+//so that every iteration he take ths mide data in the array and put in the newnode
+//if the num is -1 he put a null value into the node
+
+Tree helper(int* arr, int size) {
+
+	Tree tr, treeLeft, treeRight;
+	int mide = size / 2;
+	tr.root = (TreeNode*)malloc(sizeof(TreeNode));
+
+	if (size == 0) {
+		return;
+
 	}
-	else if (oper == '*') {
 
-		sum = newNum1 * newNum2;
-	}
-	else if (oper == '%') {
+	if (size == 1) {
 
-		sum = (int)newNum1 % (int)newNum2;
+		tr.root->data = arr[0];
+		tr.root->left = NULL;
+		tr.root->right = NULL;
+		tr.root->parent = NULL;
+
+		return tr;
 	}
 	else {
-		//if this is not a operator so this a number
-		//so return the value of the num
 
-		sum = oper - '0';
+		tr.root->data = arr[mide];
+
+		if (arr[mide / 2] != -1) {
+
+			treeLeft = helper(arr, size / 2);
+			tr.root->left = treeLeft.root;
+			tr.root->left->parent = tr.root;
+		}
+		else {
+			tr.root->left = NULL;
+		}
+
+		if (arr[mide + (mide / 2) + 1] != -1) {
+			treeRight = helper(arr + mide + 1, mide);
+			tr.root->right = treeRight.root;
+			tr.root->right->parent = tr.root;
+		}
+		else {
+			tr.root->right = NULL;
+		}
+
+	}
+	return tr;
+}
+
+TreeNode* createNode(int data, TreeNode* left, TreeNode* right,TreeNode* parent) {
+
+	TreeNode* newNode = (TreeNode*)malloc(sizeof(TreeNode));
+	newNode->data = data;
+	newNode->left = left;
+	newNode->right = right;
+	newNode->parent = parent;
+
+	return newNode;
+
+}
+
+
+void makeEmptyList(List* lst) {
+
+	lst->head = lst->tail = NULL;
+}
+
+void buildList(TreeNode* root, List* lst) {
+
+	if (root == NULL) {
+		return;
 	}
 
-	return sum;
+	else {
+
+		buildList(root->left, lst);
+		buildList(root->right, lst);
+
+		if (root->left == NULL && root->right == NULL) {
+			insertNodeToList(lst, root->data);
+		}
+	}
+}
+
+//if the list is empty change ths tail and the head els change only the tail
+//this is the insertNode TO TAIL
+ListNode* insertNodeToList(List* lst, int data) {
+
+	ListNode* node;
+	node=createNodeList(data, NULL);
+	
+	if (lst->head == NULL) {
+		lst->head =lst->tail= node;
+	}
+	else {
+		lst->tail->next = node;
+		lst->tail = node;
+	}
+	return node;
+}
+ 
+
+ListNode* creatNodeList(int data, ListNode* next) {
+
+	ListNode* newNode = (ListNode*)malloc(sizeof(ListNode));
+
+	newNode->data = data;
+	newNode->next = next;
+
+	return newNode;
+}
+
+
+TreeNode* findParent(Tree tr, int parentData,int branchSelect) {
+
+	TreeNode* parent;
+	parent = (TreeNode*)malloc(sizeof(TreeNode));
+	helperFindParent(tr.root, parentData, branchSelect,&parent);
+	return parent;
+}
+
+void helperFindParent(TreeNode* root, int parenData, int branchSelect,TreeNode **parent) {
+
+
+	if (root == NULL) {
+		return;
+	}
+	else {
+
+		helperFindParent(root->left, parenData, branchSelect,parent);
+		helperFindParent(root->right, parenData, branchSelect,parent);
+
+		if (root->data == parenData) {
+
+			if (branchSelect == 0) {
+
+				if (root->left == NULL) {
+
+					*parent = root;
+
+				}
+
+			}else{
+
+				if (root->right == NULL) {
+
+					*parent = root;
+					
+				}
+			}
+			
+		}
+
+	}
+}
+
+
+//p is the parent that is already in the tree
+Tree AddLeaf(Tree tr,TreeNode* p,int branchSelect,int data) {
+
+
+	if (branchSelect == 0) {
+		p->left = createNode(data, NULL, NULL, p);
+	}
+	else if (branchSelect == 1) {
+		p->right = createNode(data, NULL, NULL,p);
+
+	}
+
+	freeList(tr.leafList.head);
+	makeEmptyList(&tr.leafList);
+	buildList(tr.root, &tr.leafList);
+
+	return tr;
+
+}
+
+
+ListNode* createNodeList(int data, ListNode* next) {
+
+	ListNode* newNode = (ListNode*)malloc(sizeof(ListNode));
+
+	newNode->data = data;
+	newNode->next = next;
+	return newNode;
+}
+
+void printLeafList(Tree tr) {
+
+	ListNode* cur;
+
+	cur = tr.leafList.head;
+
+	while (cur != NULL) {
+
+		printf(" %d ", cur->data);
+
+		cur = cur->next;
+	}
+
+}
+
+void freeList(ListNode* cur) {
+
+	if (cur == NULL) {
+		return;
+	}
+	else {
+
+		freeList(cur->next);
+		free(cur);
+	}
+
 }
